@@ -1,0 +1,22 @@
+html:root /* This is a comment */ {
+    display: block;
+    margin: none;
+    padding: 0;
+    font: normal normal normal 12pt/1.1 "Helvetica", "Arial", sans-serif;
+}
+
+body {
+    display: block;
+    margin: none;
+    padding: 0;
+}
+
+p {
+    display: block;
+    margin: 0.5cm;
+    padding: 0;
+}
+
+body /* This is another comment */ p:first-line {
+    font-weight: bold;
+}

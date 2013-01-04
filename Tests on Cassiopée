@@ -1,0 +1,31 @@
+== Tests to perform on Cassiopée ==
+(1) Tokenize an XML document. [done]
+(2) Analyze the XML tree to:
+    (a) Fetch the doctype,[done]
+    (b) Tokenize the doctype, [done]
+    (c) Replace the entities,[done]
+    (d) Include default entities (&, <), [done]
+    (e) Validate the document.
+(3) Fetch <link> resources to:
+    (a) Fetch any stylesheet,
+    (b) Tokenize the stylesheet,
+    (c) Assign styles to elements,
+    (d) Display the elements.
+(4) Parse <meta> information (from HTTP responses & from the document) to:
+    (a) Find the author of a document,
+    (b) Find the last time it has been requested or modified,
+    (c) Implement caching.
+(5) Understand XML Schema to:
+    (a) Fetch a schema if there is one,
+    (b) Build a DTD from a schema.
+(6) Understand XSLT to:
+    (a) Transform an XML document into HTML,
+    (b) Transform an XML document into LaTeX,
+    (c) Transform an XML document into MarkDown.
+(7) Understand scripting languages to:
+    (a) Import scripts,
+    (b) Run scripts in real-time, through system programs (ex: Python, Ruby, Javascript),
+    (c) Allow for asynchronous documents.
+(8) Understand links to other documents to:
+    (a) Allow for preloading of documents,
+    (b) Import images & in-page applications.
