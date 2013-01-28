@@ -151,20 +151,23 @@ def test_siblings(self, name, stream, ancestors):
         
 
 def test_kids(self, new, stream, ancestors):
+    # Figure out what the doctype is:
     doctype = next(self.filter(lambda x: isinstance(x, DocumentType), 0))
+    # From the doctype, take the model for this element:
     model = list(doctype.filter(lambda x: isinstance(x, ElementType) and\
                                           x.name == new.name,
                                 0))[0].content
+    # Obtain all the non-null kids of the current element:
     content = list(new.filter(lambda x: isinstance(x, Element) or\
-                                        x.collapse() not in ('', ' '),
+                                        str(x) not in ('', ' '),
                               0))
-    print(repr(new), ':', content)
     last = content.pop()
+    # Eliminate superflous spaces. Basically; strip().
     while isinstance(last, Text) and Text('') not in model:
         last = content.pop()
     good = False
     for ref in model.end():
-        if last == ref:
+        if getattr(last, 'name', Text('')) == ref:
             good = True
             break
     if not good:
@@ -1041,14 +1044,13 @@ class ContentRef(Node):
     __contains__ = __eq__
 
     def end(self):
-        return set(self)
+        return frozenset(self)
     
     def append(self, ref, minoccur=1, maxoccur=1):
         if not len(self):
             super().append(ref)
         else:
             self[0] = ref
-        print(repr(self[0]))
         self.min, self.max = minoccur, maxoccur
 
     def __hash__(self):
@@ -1064,7 +1066,10 @@ class ContentRef(Node):
 class Choice(ContentRef):
 
     def end(self):
-        return set(ref.end() for ref in self)
+        kids = set()
+        for ref in self:
+            kids.update(ref.end())
+        return frozenset(kids)
 
     def append(self, ref, minoccur=1, maxoccur=1):
         super(Node, self).append(ContentRef(ref, minoccur, maxoccur))
@@ -1093,7 +1098,7 @@ class Sequence(ContentRef):
 
     def end(self):
         last = set()
-        for bit in self[::-1]:
+        for bit in self[-1::-1]:
             if bit.min == 0:
                 last.update(bit.end())
             elif bit >= 1:
@@ -1101,7 +1106,7 @@ class Sequence(ContentRef):
                 return last
             else:
                 last.update(bit.end())
-        return last
+        return frozenset(last)
 
     def append(self, ref, minoccur=1, maxoccur=1):
         super(Node, self).append(ContentRef(ref, minoccur, maxoccur))
@@ -1229,15 +1234,8 @@ if __name__ == '__main__':
     print('Let\'s go, New Parser!')
     for i in range(100):
         timer.start()
-        try:
-            parser(file)
-        except Exception as mistake:
-            print(mistake)
-            for i in mistake.context:
-                print(repr(i))
-            break
-        finally:
-            timer.stop()
+        parser(file)
+        timer.stop()
     print(timer)
     print('The average is of', timer.totaltime/100)
     print('Printing the whole parser...')

@@ -6,7 +6,7 @@
             <!ATTLIST meta  http-equiv CDATA
                             content CDATA
                             charset CDATA>
-    <!ENTITY % block_content "(#PCDATA|div|p|img|section)*">
+    <!ENTITY % block_content "((#PCDATA|div|p|img|section)*)">
     <!ELEMENT body (%block_content;)>
         <!ELEMENT div ANY>
         <!ELEMENT p ANY>
