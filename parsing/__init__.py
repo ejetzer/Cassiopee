@@ -1,10 +1,11 @@
-#!/usr/bin/python3.2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 # == Global imports ==
 import os, os.path
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
+from urllib.error import URLError
 from types import FunctionType, GeneratorType
 
 # == Global constants ==
@@ -68,8 +69,9 @@ class NoDTDDefined(InvalidMarkup):
 
 # == Validating functions ==
 
-def test_name(self, char, stream, ancestors):
-    if char in badnamestart and validate:
+def test_name(self, char, stream, ancestors, validate=False):
+    if not validate: return False
+    if char in badnamestart:
         raise IllegalCharacter('This character is not allowed at \
 the beginning of an element name: \'' + char + '\'.',
                                (self,
@@ -77,7 +79,8 @@ the beginning of an element name: \'' + char + '\'.',
                                 stream,
                                 ancestors))
 
-def test_doctype(self, char, stream, ancestors):
+def test_doctype(self, char, stream, ancestors, validate=False):
+    if not validate: return False
     mask = lambda x: isinstance(x, DocumentType)
     dtds = list(self.find(mask, -1))
     if not dtds:
@@ -93,7 +96,8 @@ def test_doctype(self, char, stream, ancestors):
                             stream,
                             ancestors))
 
-def test_existence(self, name, stream, ancestors):
+def test_existence(self, name, stream, ancestors, validate=False):
+    if not validate: return False
     mask = lambda x: isinstance(x, DocumentType)
     doctype = next(self.filter(mask, -1))
     mask = lambda x: isinstance(x, ElementType) and x.name == name
@@ -105,7 +109,8 @@ def test_existence(self, name, stream, ancestors):
                                  stream,
                                  ancestors))
 
-def test_parent(self, name, stream, ancestors):
+def test_parent(self, name, stream, ancestors, validate=False):
+    if not validate: return False
     doctype = next(self.filter(lambda x: isinstance(x, DocumentType), 0))
     parents = list(doctype.find(lambda x: isinstance(x, ElementType) and\
                                           name in x.content and\
@@ -118,7 +123,8 @@ the wrong parent (\'{}\').'.format(name, ancestors[-1].name),
                               stream,
                               ancestors))
 
-def test_closing(self, new, name, stream, ancestors):
+def test_closing(self, new, name, stream, ancestors, validate=False):
+    if not validate: return False
     if new.name != name:
         raise TagNotMatching('Tag {} has not been closed, and \
 tag {} is begin closed. This is not allowed'.format(new.name, name),
@@ -127,7 +133,8 @@ tag {} is begin closed. This is not allowed'.format(new.name, name),
                               new,
                               name))
 
-def test_siblings(self, name, stream, ancestors):
+def test_siblings(self, name, stream, ancestors, validate=False):
+    if not validate: return False
     parent = ancestors[-1]
     siblings = list(parent.filter(lambda x: isinstance(x, Element), 0))
     doctype = next(self.filter(lambda x: isinstance(x, DocumentType), 0))
@@ -150,12 +157,13 @@ def test_siblings(self, name, stream, ancestors):
         pass
         
 
-def test_kids(self, new, stream, ancestors):
+def test_kids(self, new, stream, ancestors, validate=False):
+    if not validate: return False
     # Figure out what the doctype is:
     doctype = next(self.filter(lambda x: isinstance(x, DocumentType), 0))
     # From the doctype, take the model for this element:
     model = list(doctype.filter(lambda x: isinstance(x, ElementType) and\
-                                          x.name == new.name,
+                                    x.name == new.name,
                                 0))[0].content
     # Obtain all the non-null kids of the current element:
     content = list(new.filter(lambda x: isinstance(x, Element) or\
@@ -614,10 +622,16 @@ class Parser(Node):
                 data += char
 
     def dtdfile(self, uri, ancestors):
-        name = urlretrieve(uri)
-        file = open(name[0], 'r')
-        stream = Stream(file.read())
-        self.declcontent(stream, ancestors)
+        try:
+            name = urlretrieve(str(uri))
+        except (URLError, ValueError):
+            name = [str(uri)]
+        try:
+            file = open(name[0], 'r')
+            stream = Stream(file.read())
+            self.declcontent(stream, ancestors)
+        except FileNotFoundError as fnf:
+            print('File', name[0], 'could not be found for DTD.')
 
     def newcmodel(self, stream, ancestors):
         data = ''
@@ -805,7 +819,7 @@ class Parser(Node):
         else:
             ancestors[-1].append(Text(text))
 
-    def newentref(self, stream, ancestors):
+    def newentref(self, stream, ancestors, validate=False):
         name = ''
         for char in stream:
             if char == ';':
@@ -822,8 +836,11 @@ class Parser(Node):
             if entdef:
                 value = entdef[-1].value
                 stream.insert(0, value)
-            else:
+            elif validate:
                 raise Exception('Entity Not Defined.')
+            else:
+                with open('entities_to_define', 'a+') as ent2def:
+                    print(name, file=ent2def)
 
     def __call__(self, source):
         if len(self):
