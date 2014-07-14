@@ -12,9 +12,4 @@
     </head>
     <body>
         <section>This is some text.</section>
-        <p>&content;</p>
-        <p>This is some more textual content, there only to make a point. Do not forget, to be awesome &amp; to decrease worldsuck.</p>
-        <img src="Stuff!"/>
-        <p>Normally, the filters should pick up all three paragraphs.</p>
-    </body>
-</html>
+        <p>This is some textual content. I am impressed by the fact that this is actual writing, encoded on a computer in the form of binary numbers & eventually as electrical currents.&content;</p> <p>This is some more textual content, there only to make a point. Do not forget, to be awesome &amp; to decrease worldsuck.</p> <img src="Stuff!"/> <p>Normally, the filters should pick up all three paragraphs.</p> </body> </html> 

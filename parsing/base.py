@@ -1,3 +1,5 @@
+from types import FunctionType, GeneratorType
+
 # == Global constants ==
 class Inf:
     '''This class represents all infinities. It's used for the '*' modifier.'''

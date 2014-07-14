@@ -463,7 +463,7 @@ class Parser(Node):
             entdef = list(self.filter(mask, -1))
             if entdef:
                 value = entdef[-1].value
-                stream.insert(0, value)
+                stream.insert(-len(name)-2, value)
             elif validate:
                 raise Exception('Entity Not Defined.')
             else:
@@ -504,7 +504,7 @@ class Parser(Node):
 
 if __name__ == '__main__':
     ## Active testing for the parser.
-    file = '../source.xml'
+    file = 'source.xml'
     print('## == Now, a parser show off == ##')
     from timetools import Timer
     parser = Parser()

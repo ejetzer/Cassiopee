@@ -66,6 +66,14 @@ class Stream:
         else:
             raise TypeError('index should be an int or slice.')
 
+    def insert(self, index, val):
+        index = self.tell() + index
+        self.seek(index)
+        backup = self.read()
+        self.truncate(index)
+        self.seek(index)
+        self.write(val+backup)
+
     def isatty(self):
         return self.tty
 
@@ -82,10 +90,9 @@ class Stream:
         return not bool(exc_type)
     
     def fileno(self):
-        self.lock.acquire()
-        with self.name.open() as file:
-            return file.fileno()
-        self.lock.release()
+        with self.lock:
+            with self.name.open() as file:
+                return file.fileno()
     
     def close(self):
         pass
@@ -106,73 +113,72 @@ class Stream:
             self.pos += pos
         elif whence == 2:
             length = 0
-            self.acquire()
+            self.pos = len(self) - 1 + pos
+
+    def __len__(self):
+        with self.lock:
             with self.name.open() as file:
-                length = len(file.read())
-            self.pos = length - 1 + pos
-            self.release()
+                return len(file.read())
+        return 0
 
     def writable(self):
         return True
     
     def write(self, data):
-        self.acquire()
-        with self.name.open('a') as file:
-            file.seek(self.pos)
-            file.write(data)
-            self.seek(file.tell())
-        self.release()
+        with self.lock:
+            with self.name.open('a') as file:
+                file.seek(self.pos)
+                file.write(str(data))
+                self.seek(file.tell())
     
     def writelines(self, data, sep=''):
-        with self.name.open('a') as file:
-            file.seek(self.pos)
-            file.write(sep.join(data))
-            self.seek(file.tell())
+        with self.lock:
+            with self.name.open('a') as file:
+                file.seek(self.pos)
+                file.write(sep.join(str(i) for i in data))
+                self.seek(file.tell())
 
     def readable(self):
         return True
     
     def read(self, size=-1):
         output = ''
-        self.acquire()
-        with self.name.open() as file:
-            file.seek(self.pos)
-            output = file.read(size)
-            self.seek(file.tell())
-        self.release()
+        with self.lock:
+            with self.name.open() as file:
+                file.seek(self.pos)
+                output = file.read(size)
+                self.seek(file.tell())
         return output
     
     def readline(self, size=-1):
         output = ''
-        self.acquire()
-        with self.name.open() as file:
-            file.seek(self.pos)
-            output = file.readline(size)
-            self.seek(file.tell())
-        self.release()
+        with self.lock:
+            with self.name.open() as file:
+                file.seek(self.pos)
+                output = file.readline(size)
+                self.seek(file.tell())
         return output
     
     def readlines(self, sizehint=-1):
         output = ['']
-        self.acquire()
-        with self.name.open() as file:
-            file.seek(self.pos)
-            output = file.readlines(sizehint)
-            self.seek(file.tell())
-        self.release()
+        with self.lock:
+            with self.name.open() as file:
+                file.seek(self.pos)
+                output = file.readlines(sizehint)
+                self.seek(file.tell())
         return output
 
     def truncate(self, size=None):
-        self.acquire()
-        with self.name.open() as file:
-            file.seek(self.pos)
-            newsize = file.truncate(size)
-        self.release()
+        with self.lock:
+            with self.name.open('a+') as file:
+                file.seek(self.pos)
+                newsize = file.truncate(size)
         return newsize
 
 class Lock:
 
     def __init__(self, name=''):
+        print(name)
         self.name = pathlib.Path(name + '.lock')
 
     def acquire(self, blocking=True, timeout=-1, delay=DELAY):
@@ -204,8 +210,9 @@ class Lock:
     def __enter__(self):
         return self.acquire()
 
-    def __exit__(self):
-        return self.release()
+    def __exit__(self, exc_type, exc_value, trace):
+        self.release()
+        return not bool(exc_type)
 
 if __name__ == '__main__':
     print('########################')
