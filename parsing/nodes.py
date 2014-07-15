@@ -1,4 +1,7 @@
-from base import *
+import sys
+sys.path.append('../')
+
+from parsing.base import *
 
 # == XML Elements, Attributes & Processing Instructions ==
 class ProcessingInstruction(Node):

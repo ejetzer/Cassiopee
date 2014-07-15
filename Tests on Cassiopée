@@ -19,9 +19,9 @@
     (a) Fetch a schema if there is one,
     (b) Build a DTD from a schema.
 (6) Understand XSLT to:
-    (a) Transform an XML document into HTML,
-    (b) Transform an XML document into LaTeX,
-    (c) Transform an XML document into MarkDown.
+    (a) Transform an arbitrary XML document into HTML,
+    (b) Transform an HTML document into LaTeX,
+    (c) Transform an HTML document into MarkDown.
 (7) Understand scripting languages to:
     (a) Import scripts,
     (b) Run scripts in real-time, through system programs (ex: Python, Ruby, Javascript),

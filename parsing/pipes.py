@@ -1,4 +1,3 @@
-from __future__ import print_function, with_statement, unicode_literals
 import sys, pathlib, time, os
 
 DELAY = 1
@@ -6,15 +5,16 @@ DELAY = 1
 class Stream:
     'Writable & readable file, with builtin locks and list-like access.'
     
-    def __init__(self, name, tty=False, buffer=100):
+    def __init__(self, name, tty=False, buffer=1000):
         self.name = pathlib.Path(name)
         self.pos = 0
         self.lock = Lock(name)
         self.tty = tty
-        self.buffer = buffer
+        self.buffsize, self.buffer, self.buffpos = buffer, '', 0
         self.mode = 'a+'
         self.acquire()
         with self.name.open() as file:
+            self.buffer = file.read(self.buffsize)
             self.encoding = file.encoding
         self.release()
 
@@ -35,7 +35,8 @@ class Stream:
         elif isinstance(index, slice):
             self.seek(index.start)
             res = ''
-            for i in range(0, index.stop-index.start, index.step):
+            for i in range(0, index.stop-index.start,
+                           index.step if index.step else 1):
                 res += self.read(1)
             return res
         else:
@@ -48,11 +49,12 @@ class Stream:
             self.seek(index)
             self.write(val)
         elif isinstance(index, slice):
-            if index.step != 1: raise ValueError('step must be 1.')
+            if index.step not in (1, None):
+                raise ValueError('step must be 1.')
             self.seek(index.stop)
             backup = self.read()
             self.seek(index.start)
-            self.truncate(self.start)
+            self.truncate(index.start)
             self.write(val + backup)
         else:
             raise TypeError('index should be an int or slice.')
@@ -143,11 +145,23 @@ class Stream:
     
     def read(self, size=-1):
         output = ''
-        with self.lock:
-            with self.name.open() as file:
-                file.seek(self.pos)
-                output = file.read(size)
-                self.seek(file.tell())
+        if self.pos < self.buffpos or\
+           self.pos > self.buffpos + self.buffsize or\
+           (self.pos + size > self.buffpos + self.buffsize and size != -1) or\
+           size == -1:
+            # The cursor was placed before or after the buffer,
+            # or the selection ends after the buffer.
+            with self.lock:
+                with self.name.open() as file:
+                    file.seek(self.pos)
+                    output = file.read(size)
+                    self.seek(file.tell())
+                    self.buffpos = file.tell()
+                    self.buffer = file.read(self.buffsize)
+        else:
+            start = self.pos - self.buffpos
+            output = self.buffer[start:start+size]
+            self.seek(size, 1)
         return output
     
     def readline(self, size=-1):
@@ -178,8 +192,8 @@ class Stream:
 class Lock:
 
     def __init__(self, name=''):
-        print(name)
-        self.name = pathlib.Path(name + '.lock')
+        self.name = pathlib.Path(name)
+        self.name = self.name.with_suffix('.lock')
 
     def acquire(self, blocking=True, timeout=-1, delay=DELAY):
         timeleft = timeout // delay
