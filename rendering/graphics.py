@@ -4,9 +4,22 @@
 import tkinter as tk
 from math import cos, sin, pi
 
+class Color:
+
+    def __init__(self, r=0, g=0, b=0, a=1):
+        self.r = r
+        self.g = g
+        self.b = b
+        # I need to find a way to implement transparency...
+        self.a = a
+        self.model = '#{:0>4X}{:0>4X}{:0>4X}'
+
+    def __str__(self):
+        return self.model.format(self.r, self.g, self.b)
+
 class Point(dict):
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, color=Color(), distance='c'):
         self['x'] = x
         self['y'] = y
 
@@ -25,6 +38,7 @@ class Point(dict):
             raise TypeError('master must be of <Canvas> type.')
 
     def __add__(self, other):
+        # Should addition allow for color mixing? Probably not...
         if isinstance(other, (Point, dict)):
             return Point(self['x'] + other['x'], self['y'] + other['y'])
         elif isinstance(other, (list, tuple)):
@@ -33,9 +47,15 @@ class Point(dict):
             raise TypeError('Only <tuple>, <list>, <dict> & <Point> can be\
  added to <Point> objects.')
 
+    def __div__(self, other):
+        # Division could be understood as a stacking operator,
+        # used to superimpose points...
+        # This is how transparency could be implemented.
+        pass
+
 class Line(list):
 
-    def __init__(self, start, end):
+    def __init__(self, start, end, color=Color()):
         self.start = Point(*start)
         self.end = Point(*end)
         self.genpoints()
@@ -64,7 +84,7 @@ class Line(list):
 
 class Path(list):
 
-    def __init__(self, *points):
+    def __init__(self, *points, color=Color()):
         self.vertices = points
         self.genlines()
         self.genpoints()
@@ -85,20 +105,23 @@ class Path(list):
 
 class Polygon(Path):
 
-    def __init__(self, *points):
+    def __init__(self, *points, color=Color()):
         self.vertices = points + points[0:1]
         self.genlines()
         self.genpoints()
 
 class Rectangle(Polygon):
 
-    def __init__(self, start, end):
-        points = (start, (start[0], end[1]), end, (start[1], end[0]))
+    def __init__(self, start, end, color=Color()):
+        width = end[0] - start[0]
+        height = end[1] - start[1]
+        points = (start, (start[0], start[1]+height),
+                  end, (start[0]+width, start[1]))
         super().__init__(*points)
 
 class Curve(list):
 
-    def __init__(self, func=lambda x: x, dom=[0, 100], res=1):
+    def __init__(self, func=lambda x: x, dom=[0, 100], res=1, color=Color()):
         self.func = func
         self.dom = [int(res*i) for i in dom]
         self.genpoints()
@@ -113,7 +136,7 @@ class Curve(list):
 
 class Circle(Curve):
 
-    def __init__(self, center=(0, 0), radius=100, res=2e4):
+    def __init__(self, center=(0, 0), radius=100, res=2e4, color=Color()):
         super().__init__(lambda t: (round(radius * cos(2*t/res) + center[0]),
                                     round(radius * sin(2*t/res) + center[1])),
                          [0, pi],
@@ -132,6 +155,8 @@ if __name__ == '__main__':
     d.display(canvas)
     e = Curve(lambda t: (t/10, 1e-4*t**2), [0, 10], 1e4)
     e.display(canvas)
+    f = Rectangle((10, 10), (50, 100))
+    f.display(canvas)
     canvas.pack()
     root.mainloop()
     root.destroy()

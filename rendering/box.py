@@ -12,11 +12,9 @@ class Box(list):
         end = (left+width, top+height)
         self.container = Rectangle(tuple(i+padding for i in start),
                                    tuple(i-padding for i in end))
-        print(tuple(i+padding for i in start), tuple(i-padding for i in end))
         self.padding = Rectangle(start, end)
         self.margin = Rectangle(tuple(i-margin for i in start),
                                 tuple(i+margin for i in end))
-        print(tuple(i-margin for i in start), tuple(i+margin for i in end))
 
     def display(self, master=None):
         self.margin.display(master)
@@ -25,9 +23,13 @@ class Box(list):
         for el in self:
             el.display(master)
 
+    def bind(self, sequence, func, add=''):
+        pass
+
 if __name__ == '__main__':
     root = tk.Tk()
     canvas = tk.Canvas(master=root)
+    canvas.master.title('My Box Model Tests')
     a = Box([], 100, 100, 10, 10, 0, 0)
     a.display(canvas)
     canvas.pack()
