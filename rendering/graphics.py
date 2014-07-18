@@ -1,5 +1,4 @@
-#!/usr/bin/python3.2
-# -*- coding: utf-8 -*-
+#!/usr/bin/python3.4
 
 import tkinter as tk
 from math import cos, sin, pi
@@ -15,7 +14,16 @@ class Color:
         self.model = '#{:0>4X}{:0>4X}{:0>4X}'
 
     def __str__(self):
-        return self.model.format(self.r, self.g, self.b)
+        return self.model.format(int(self.r*16**4),
+                                 int(self.g*16**4),
+                                 int(self.b*16**4))
+
+    def __add__(self, other):
+        r = (self.a*self.r + other.a*other.r) / (self.a + other.a)
+        g = (self.a*self.g + other.a*other.g) / (self.a + other.a)
+        b = (self.a*self.b + other.a*other.b) / (self.a + other.a)
+        a = (self.a*self.a + other.a*other.a) / (self.a + other.a)
+        return Color(r, g, b, a)
 
 class Point(dict):
 
@@ -33,7 +41,8 @@ class Point(dict):
         if master:
             point = master.create_line(self['x'], self['y'],
                                        self['x']+1, self['y']+1,
-                                       tags=str(hash(self)))
+                                       tags=str(hash(self)),
+                                       color=str(self.color))
         else:
             raise TypeError('master must be of <Canvas> type.')
 
@@ -51,7 +60,18 @@ class Point(dict):
         # Division could be understood as a stacking operator,
         # used to superimpose points...
         # This is how transparency could be implemented.
-        pass
+        if isinstance(other, Point):
+            if self['x'] == other['x'] and\
+               self['y'] == other['y']:
+                return Point(self['x'], self['y'],
+                             color=self.color+other.color)
+            else:
+                return self
+        elif isinstance(other, list):
+            return [self/i for i in other]
+        else:
+            raise TypeError('Only <Point> objects can \'divide\' other \
+<Point> objects.')
 
 class Line(list):
 
@@ -82,6 +102,18 @@ class Line(list):
         for point in self:
             point.display(master)
 
+    def __div__(self, other):
+        if isinstance(other, Point):
+            return [i/other for i in self]
+        elif isinstance(other, list):
+            output = Line(self[:])
+            for i in range(len(self)):
+                for pt in other:
+                    output[i] = output[i] / pt
+        else:
+            raise TypeError('Sorry, this has to be some list of Point objects, \
+or a Point object so that it can divide a Line.')
+
 class Path(list):
 
     def __init__(self, *points, color=Color()):
@@ -102,6 +134,16 @@ class Path(list):
     def display(self, master=None):
         for point in self:
             point.display(master)
+
+    def __div__(self, other):
+        if isinstance(other, Point):
+            return [i/other for i in self]
+        elif isinstance(other, list):
+            output = self[:]
+            for i in range(len(self)):
+                for pt in other:
+                    output[i] = output[i] / pt
+            return output
 
 class Polygon(Path):
 
@@ -133,6 +175,16 @@ class Curve(list):
     def display(self, master=None):
         for point in self:
             point.display(master)
+
+    def __div__(self, other):
+        if isinstance(other, Point):
+            return [i/other for i in self]
+        elif isinstance(other, list):
+            output = self[:]
+            for i in range(len(self)):
+                for pt in other:
+                    output[i] = output[i] / pt
+            return output
 
 class Circle(Curve):
 

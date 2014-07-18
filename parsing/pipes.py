@@ -5,7 +5,7 @@ DELAY = 1
 class Stream:
     'Writable & readable file, with builtin locks and list-like access.'
     
-    def __init__(self, name, tty=False, buffer=1000):
+    def __init__(self, name, tty=False, buffer=int(1e6)):
         self.name = pathlib.Path(name)
         self.pos = 0
         self.lock = Lock(name)

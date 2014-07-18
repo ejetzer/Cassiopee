@@ -23,6 +23,15 @@ class Box(list):
         for el in self:
             el.display(master)
 
+    def __div__(self, other):
+        if isinstance(other, Point):
+            return [i/other for i in self]
+        elif isinstance(other, list):
+            output = Line(self[:])
+            for i in range(len(self)):
+                for pt in other:
+                    output[i] = output[i] / pt
+
     def bind(self, sequence, func, add=''):
         pass
 
@@ -30,7 +39,7 @@ if __name__ == '__main__':
     root = tk.Tk()
     canvas = tk.Canvas(master=root)
     canvas.master.title('My Box Model Tests')
-    a = Box([], 100, 100, 10, 10, 0, 0)
+    a = Box([], 100, 100, 10, 10, 5, 5)
     a.display(canvas)
     canvas.pack()
     root.mainloop()
