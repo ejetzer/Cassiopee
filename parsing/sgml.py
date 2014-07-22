@@ -1,7 +1,7 @@
 import sys
-sys.path.append('../')
+sys.path.append('../..')
 
-from parsing.base import *
+from Cassiopee.parsing.base import *
 
 # == SGML Tags: DOCTYPE, ELEMENT, ATTLIST & ENTDEF, along with Comments & ==
 # == Entity References                                                    ==

@@ -1,6 +1,3 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
 # == Global imports ==
 import os, os.path, sys
 from urllib.parse import urlparse
@@ -10,14 +7,14 @@ from pathlib import Path
 from types import FunctionType, GeneratorType
 
 # == Local imports ==
-sys.path.append('../')
+sys.path.append('../..')
 
-from parsing.exceptions import *
-from parsing.validate import *
-from parsing.pipes import Stream
-from parsing.base import *
-from parsing.sgml import *
-from parsing.nodes import *
+from Cassiopee.parsing.exceptions import *
+from Cassiopee.parsing.validate import *
+from Cassiopee.parsing.pipes import Stream
+from Cassiopee.parsing.base import *
+from Cassiopee.parsing.sgml import *
+from Cassiopee.parsing.nodes import *
 
 class Parser(Node):
 

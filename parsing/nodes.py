@@ -1,7 +1,7 @@
 import sys
-sys.path.append('../')
+sys.path.append('../..')
 
-from parsing.base import *
+from Cassiopee.parsing.base import *
 
 # == XML Elements, Attributes & Processing Instructions ==
 class ProcessingInstruction(Node):
