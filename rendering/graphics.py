@@ -30,6 +30,8 @@ class Point(dict):
     def __init__(self, x, y, color=Color(), distance='c'):
         self['x'] = x
         self['y'] = y
+        self.color = color
+        self.distance = distance
 
     def __repr__(self):
         return '(x, y) => ({}, {})'.format(self['x'], self['y'])
@@ -41,8 +43,7 @@ class Point(dict):
         if master:
             point = master.create_line(self['x'], self['y'],
                                        self['x']+1, self['y']+1,
-                                       tags=str(hash(self)),
-                                       color=str(self.color))
+                                       tags=str(hash(self)))
         else:
             raise TypeError('master must be of <Canvas> type.')
 
